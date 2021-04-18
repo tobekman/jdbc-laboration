@@ -1,87 +1,64 @@
 package com.tobiasekman;
 
-import java.sql.*;
-import java.util.ArrayList;
+import javax.persistence.*;
 import java.util.List;
 
 public class DatabaseHandler {
-    static Connection conn;
-    static Statement st;
+    private final EntityManagerFactory entityManagerFactory;
+    private final EntityManager entityManager;
 
-    static {
-        try {
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/artist_management", "root", "password");
-            st = conn.createStatement();
-        } catch (SQLException ex) {
-            System.out.println("Could not connect to database");
-        }
+    public DatabaseHandler() {
+
+        this.entityManagerFactory = Persistence.createEntityManagerFactory("artist_management");
+        this.entityManager = entityManagerFactory.createEntityManager();
+
     }
 
-    public void Add(Artist artist) throws SQLException {
-        PreparedStatement add = conn.prepareStatement("INSERT INTO artist (firstname, lastname, age, stagename) values (?,?,?,?)");
 
-        add.setString(1, artist.getFirstName());
-        add.setString(2, artist.getLastName());
-        add.setInt(3, artist.getAge());
-        add.setString(4, artist.getStageName());
+    public void Add(Artist artist) {
 
-        add.executeUpdate();
-        add.close();
+        entityManager.getTransaction().begin();
+        entityManager.persist(artist);
+        entityManager.getTransaction().commit();
+
     }
 
-    public List<Artist> getArtists() throws SQLException {
+    public List<Artist> getArtists() {
 
-        ResultSet rs = st.executeQuery("SELECT * FROM artist");
-        List<Artist> artists = new ArrayList<>();
-        while (rs.next()) {
-            Artist artist = new Artist(rs.getInt("id"),
-                    rs.getString("firstname"),
-                    rs.getString("lastname"),
-                    rs.getInt("age"),
-                    rs.getString("stagename"));
-            artists.add(artist);
-        }
-
-        rs.close();
+        entityManager.getTransaction().begin();
+        Query query = entityManager.createQuery("SELECT a FROM Artist a");
+        List<Artist> artists = query.getResultList();
+        entityManager.getTransaction().commit();
         return artists;
 
     }
 
-    public void updateArtist(Artist artist) throws SQLException {
+    public void updateArtist(Artist artist) {
 
-        PreparedStatement update = conn.prepareStatement("UPDATE artist SET firstname = ?, lastname = ?, age = ?, stagename = ? WHERE id = ?");
-
-        update.setString(1, artist.getFirstName());
-        update.setString(2, artist.getLastName());
-        update.setInt(3, artist.getAge());
-        update.setString(4, artist.getStageName());
-        update.setInt(5, artist.getId());
-
-        update.executeUpdate();
-        update.close();
+        entityManager.getTransaction().begin();
+        Artist updatedArtist = entityManager.find(Artist.class, artist.getId());
+        updatedArtist.setFirstName(artist.getFirstName());
+        updatedArtist.setLastName(artist.getLastName());
+        updatedArtist.setAge(artist.getAge());
+        updatedArtist.setStageName(artist.getStageName());
+        entityManager.getTransaction().commit();
 
     }
 
-    public void deleteArtist(int id) throws SQLException {
-        PreparedStatement deleteEmployee = conn.prepareStatement("DELETE FROM artist WHERE id=?");
+    public void deleteArtist(int id) {
 
-        deleteEmployee.setInt(1, id);
+        entityManager.getTransaction().begin();
+        Artist artist = entityManager.find(Artist.class, id);
+        entityManager.remove(artist);
+        entityManager.getTransaction().commit();
 
-        deleteEmployee.executeUpdate();
-        deleteEmployee.close();
     }
 
-    public Artist findArtistById(int id) throws SQLException {
-        ResultSet rs = st.executeQuery("SELECT * FROM artist WHERE id=" + id);
-        Artist artist = new Artist();
-        while(rs.next()) {
-            artist.setId(rs.getInt("id"));
-            artist.setFirstName(rs.getString("firstname"));
-            artist.setLastName(rs.getString("lastname"));
-            artist.setAge(rs.getInt("age"));
-            artist.setStageName(rs.getString("stagename"));
-        }
-        rs.close();
+    public Artist findArtistById(int id) {
+
+        entityManager.getTransaction().begin();
+        Artist artist = entityManager.find(Artist.class, id);
+        entityManager.getTransaction().commit();
         return artist;
 
     }

@@ -19,7 +19,7 @@ public class ArtistManager {
 
     }
 
-    public void createArtist() throws SQLException {
+    public void createArtist() {
 
         System.out.print("First name: ");
         String firstName = sc.nextLine();
