@@ -25,11 +25,7 @@ public class DatabaseHandler {
 
     public List<Artist> getArtists() {
 
-        entityManager.getTransaction().begin();
-        Query query = entityManager.createQuery("SELECT a FROM Artist a");
-        List<Artist> artists = query.getResultList();
-        entityManager.getTransaction().commit();
-        return artists;
+        return entityManager.createQuery("SELECT a FROM Artist a").getResultList();
 
     }
 
@@ -56,10 +52,7 @@ public class DatabaseHandler {
 
     public Artist findArtistById(int id) {
 
-        entityManager.getTransaction().begin();
-        Artist artist = entityManager.find(Artist.class, id);
-        entityManager.getTransaction().commit();
-        return artist;
+        return entityManager.find(Artist.class, id);
 
     }
 
